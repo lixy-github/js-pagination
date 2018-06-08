@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>纯js分页</title>
+    <script src="jquery-1.9.1.min.js"></script>
+    <style>
+        .clearfix:after {
+            visibility: hidden;
+            display: block;
+            content: "";
+            clear: both;
+            font-size: 0;
+            height: 0;
+        }
+
+        .clearfix {
+            *zoom: 1;
+        }
+
+        .listBox {
+            margin: 40px;
+        }
+
+        .listBox .list {
+            border: 1px solid #f00;
+            width: 200px;
+            height: 200px;
+            text-align: center;
+            line-height: 200px;
+            float: left;
+            margin-right: 5px;
+        }
+
+
+
+        .pagination a,
+        .pagination span {
+            display: inline-block;
+            width: 45px;
+            height: 45px;
+            text-align: center;
+            line-height: 45px;
+            border: 2px solid #eaeaea;
+            border-radius: 3px;
+            font-size: 14px;
+            color: #7f7f7f;
+            text-decoration: none;
+        }
+
+        .pagination .page_check,
+        .pagination a:hover {
+            color: #fff;
+            background: #159eee;
+            border-color: #159eee;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="listBox clearfix">
+        <div class="list">1</div>
+        <div class="list">2</div>
+        <div class="list">3</div>
+        <div class="list">4</div>
+        <div class="list">5</div>
+        <div class="list">6</div>
+        <div class="list">7</div>
+        <div class="list">8</div>
+        <div class="list">9</div>
+        <div class="list">10</div>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pagination"></div>
+
+    <script>
+        // 分页
+        var obj, j;
+        var page = 0;
+        var currentPage = 0; //当前页
+        var listNum = 3; //每页显示个数
+        var PagesLen; //总页数
+        var PageNum = 2; //分页链接个数
+
+        window.onload = function () {
+            obj = $(".listBox .list");
+            j = obj.length; //要分页数据的个数
+            PagesLen = Math.ceil(j / listNum); //总页数
+            upPage(0);
+        }
+
+        function upPage(p) {
+            currentPage = p
+            //内容变换
+            for (var i = 0; i < j; i++) {
+                obj[i].style.display = "none"
+            }
+            for (var i = p * listNum; i < (p + 1) * listNum; i++) {
+                if (obj[i]) obj[i].style.display = "block";
+
+            }
+            //分页链接变换
+            var strS = '<a href="#" onclick="upPage(0)">首页</a> '; //首页
+            var strPrev = '<a class="pagination_prev" href="javascript:;" onclick="upPage(' + 'currentPage==0?0:(currentPage-1)' +
+                ')">上一页</a> '; //上一页
+            var PageNum_2 = PageNum % 2 == 0 ? Math.ceil(PageNum / 2) + 1 : Math.ceil(PageNum / 2);
+            var PageNum_3 = PageNum % 2 == 0 ? Math.ceil(PageNum / 2) : Math.ceil(PageNum / 2) + 1;
+
+            var strC = "",
+                startPage, endPage;
+            if (PageNum >= PagesLen) {
+                startPage = 0;
+                endPage = PagesLen - 1;
+            } else if (currentPage < PageNum_2) {
+                startPage = 0;
+                endPage = PagesLen - 1 > PageNum ? PageNum : PagesLen - 1;
+            } else {
+                startPage = (currentPage + PageNum_3 >= PagesLen) ? PagesLen - PageNum - 1 : currentPage -
+                    PageNum_2 +
+                    1;
+                var t = startPage + PageNum;
+                endPage = (t > PagesLen) ? PagesLen - 1 : t;
+            }
+
+            // console.log(startPage, endPage);
+            for (var i = startPage; i <= endPage; i++) {
+                if (i == currentPage) {
+                    strC += '<a class="page_check" href="javascript:;" onclick="upPage(' + i + ')">' + (i + 1) +
+                        '</a> ';
+                } else {
+                    strC += '<a class="page_page" href="javascript:;" onclick="upPage(' + i + ')">' + (i + 1) +
+                        '</a> ';
+                }
+            }
+            var strE = '<a style="margin-left:5px;" href="#" onclick="upPage(' + (PagesLen - 1) + ')">尾页</a>'; //尾页
+
+            var strNext = '<a class="pagination_next" href="javascript:;" onclick="upPage(' +
+                'currentPage==(PagesLen - 1)?(PagesLen - 1):(currentPage+1)' + ')">下一页</a>'; //下一页
+
+            var strT = '<span style="width:auto;padding:0 5px;margin-left:5px;">共' + PagesLen + '页</span>'; //总页数
+
+            var strTo =
+                '<input onkeyup="checkStr(event)" onafterpaste="checkStr(event)" class="toInt" type="text" value="" style="width:40px;height:40px;">' +
+                '<button type="button" onclick="toPage()">确定</button>'; //跳转
+
+            $(".pagination").html(strS + strPrev + strC + strNext + strE + strT + strTo);
+
+            // 上一页   下一页是否显示
+            if (currentPage == 0) {
+                $(".pagination_prev").hide();
+            }
+            if (currentPage == PagesLen - 1) {
+                $(".pagination_next").hide();
+            }
+        }
+
+
+        // 必须输入大于 1 的数字
+        function checkStr(event) {
+            var e = event || window.event;
+            var target = event.target || event.srcElement;
+            target.value = target.value.replace(/^0|\D/g, "");
+            // console.log($(target))
+        };
+
+        function toPage() {
+            var nP = $(".toInt").val();
+            if (nP == "") {
+                alert("请输入页码！")
+            } else if (nP > PagesLen) {
+                alert("共" + PagesLen + "页！！")
+            } else {
+                upPage(nP - 1)
+            }
+        }
+    </script>
+</body>
+
+</html>
